@@ -22,24 +22,12 @@ fork({
 	~runs = ~settings.noiseSettings.collect {
 		|noiseSettings, i|
 		"Run %, settings: %".format(i, noiseSettings).postln;
-
 		OfflineProcessRun(
 			parent: 	~noise,
 			fileOrTime:	~settings.input,
-			args: (
-				noise: noiseSettings
-			)
+			args:		(noise: noiseSettings)
 		).run
 	};
-
-	// // One more run with no noise - this should be the best case for matching
-	// ~runs.add(OfflineProcessRun(
-	// 	parent: 	~noise,
-	// 	fileOrTime:	~settings.input,
-	// 	args: (
-	// 		noise: (db:-inf, lo:22000, hi:1)
-	// 	)
-	// ).run);
 
 	Deferred.usingAll(~runs.collect(_.deferred)).wait();
 	"DONE".postln;
@@ -202,7 +190,6 @@ fork({
 			#iteration, start, end = item.test;
 			guess = item.start;
 			dataIndex = item.compareIndex ? iteration;
-			dataIndex.postln;
 
 			start = (start * ~settings.sampleMultiplier).floor.asInteger;
 			end = (end * ~settings.sampleMultiplier).floor.asInteger;
