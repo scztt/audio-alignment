@@ -1,6 +1,6 @@
 {
-	|name, run|
-	var i = 0, windowSize = 256, max = 0, resultMax, resultMaxMax, resultMaxMin, resultDownsampled, lane;
+	|name, run, windowSize=256, windowStep=(1/4)|
+	var i = 0, max = 0, resultMax, resultMaxMax, resultMaxMin, resultDownsampled, lane;
 
 	resultMax = run.resultData(name);
 	resultMax = resultMax.collect(_[10..]);
@@ -17,7 +17,7 @@
 			max = max.max(resultMax[i+j]);
 		};
 		resultDownsampled.add(max);
-		i = i + (windowSize / 4);
+		i = i + (windowSize * windowStep);
 	};
 
 	resultDownsampled;

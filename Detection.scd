@@ -2,6 +2,14 @@
 // Log(\OfflineProcess).level = \debug;
 
 ~settings = Require("Settings");
+~soundFile = SoundFile();
+~soundFile.openRead(~settings.input);
+~settings.sampleMultiplier = (
+	~soundFile.sampleRate
+	/ (~settings.resampleWindow * ~settings.resampleStep)
+	/ 64 // Control block size
+);
+~soundFile.close();
 
 fork({
 	var done;
@@ -61,7 +69,9 @@ fork({
 	"RESAMPLING...".postln;
 
 	~downsampleFunc = Require("downsample");
-	~downsampledData = ~analyzeRuns.collect(~downsampleFunc.value(\analyze, _));
+	~downsampledData = ~analyzeRuns.collect(
+		~downsampleFunc.value(\analyze, _, ~settings.resampleWindow, ~settings.resampleStep)
+	);
 	/////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -78,8 +88,8 @@ fork({
 		"\n\nTesting iteration %, range %s - %s against all other iterations".format(
 			iteration, start, end).postln;
 
-		start = (start * 44100 / 64 / 64).floor.asInteger;
-		end = (end * 44100 / 64 / 64).floor.asInteger;
+		start = (start * ~settings.sampleMultiplier).floor.asInteger;
+		end = (end * ~settings.sampleMultiplier).floor.asInteger;
 
 		data = ~downsampledData[iteration][start..end];
 
@@ -98,7 +108,7 @@ fork({
 				if ((corr > 0.2) && (corr > maxCorr)) {
 					"    Found new max correlation: % (at %s)".format(
 						corr,
-						startTarget * 64 * 64 / 44100
+						startTarget / ~settings.sampleMultiplier
 					).postln;
 					maxCorr = corr;
 					maxTarget = startTarget;
@@ -107,7 +117,7 @@ fork({
 				startTarget = startTarget + 1;
 			};
 
-			maxTarget = maxTarget * 64 * 64 / 44100;
+			maxTarget = maxTarget / ~settings.sampleMultiplier;
 			">> Best match for comparing % against %: %s offset".format(
 				iteration, comparison,
 				maxTarget
@@ -194,9 +204,9 @@ fork({
 			dataIndex = item.compareIndex ? iteration;
 			dataIndex.postln;
 
-			start = (start * 44100 / 64 / 64).floor.asInteger;
-			end = (end * 44100 / 64 / 64).floor.asInteger;
-			guess = (guess * 44100 / 64 / 64).floor.asInteger;
+			start = (start * ~settings.sampleMultiplier).floor.asInteger;
+			end = (end * ~settings.sampleMultiplier).floor.asInteger;
+			guess = (guess * ~settings.sampleMultiplier).floor.asInteger;
 
 			~view = SoundFileView();
 			~view.gridOn = false;

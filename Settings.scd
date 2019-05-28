@@ -6,4 +6,6 @@ Event.make({
 		|i|
 		(db: -20 + (i * 6), low: 20, hi: 7000)
 	}) ++ [(db: -inf, low: 20, hi: 7000)]  // no noise
+	~resampleWindow = 256;
+	~resampleStep	= 1/4;
 })
